@@ -1,6 +1,6 @@
 <template>
   <div id="app" style="vertical-align:top">
-    <h3>Validating Networks</h3>
+    <h3>Ledger delegation tool ChainLayer</h3>
     <div class="alert alert-warning" v-if="this.$browserDetect.meta.name!='Chrome'">Delegating with Ledger only supported on Chrome</div>
     <CosmosLedger msg="Delegation"/>
     <TerraLedger msg="Delegation"/>
