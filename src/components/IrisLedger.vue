@@ -4,7 +4,7 @@
         <span v-if="this.staked!=''"><label>Staked by ChainLayer: </label><br>
             <span>{{staked}} {{denom}} ({{stakedUSD}})</span><br></span>
         <span v-if="this.price!=''">Price {{denom}}: $ {{price}}</span><br>
-        <button v-on:click="show" class="btn btn-outline-success">Delegate</button>
+        <button v-if="this.$browserDetect.meta.name=='Chrome'" v-on:click="show" class="btn btn-outline-success">Delegate</button>
 
         <modal name="iris-modal" :width="600" :draggable="true" :scrollable="true" height="auto">
             <div class="modal-content">

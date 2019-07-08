@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import App from './App.vue'
 import VModal from 'vue-js-modal'
+import browserDetect from "vue-browser-detect-plugin";
 
+Vue.use(browserDetect);
 Vue.use(VModal);
 Vue.config.productionTip = false;
 
