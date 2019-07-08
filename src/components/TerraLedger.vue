@@ -20,8 +20,9 @@
                         <span v-if="this.readytodelegate" style="color: forestgreen;"><i class="fas fa-coins fa-3x"></i></span>
                         <span v-if="!this.readytodelegate"><i class="fas fa-coins fa-3x"></i></span>
                     </p>
-                    <span v-if="this.connecting==true"><div class="alert alert-info">looking for ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
-                    <span v-if="this.isdelegating==true"><div class="alert alert-info">delegating, please check ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
+                    <span v-if="this.connecting==true"><div class="alert alert-info">Looking for ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
+                    <span v-if="this.isdelegating==true"><div class="alert alert-info">Delegating, please check ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
+                    <span v-if="this.success!=''"><div class="alert alert-success">{{success}}</div></span>
                     <span v-if="this.error!=''"><div class="alert alert-warning">{{error}}</div></span>
                     <span v-if="this.connecting==false && this.connected==false"><button v-on:click="tryConnect" class="btn btn-outline-success">Connect Ledger</button><br></span>
                     <span v-if="this.bech32!=''"><b>Your Adress</b><br></span>
@@ -93,6 +94,7 @@
                 validator: '',
                 rewards: '',
                 isdelegating: '',
+                success: '',
                 hrp: ''
             }
         },
@@ -125,16 +127,17 @@
                 }
             },
             init: async function () {
+                this.success = '';
                 this.error = '';
                 this.myAddr = null;
                 this.denom = 'Luna';
+                this.isdelegating=false;
                 this.readytodelegate = false;
                 this.baseamount = 1000000;
                 this.validator = 'terravaloper1kgddca7qj96z0qcxr2c45z73cfl0c75paknc5e';
                 this.chainId = 'columbus-2';
 
                 this.log(this.consoleLog, "Trying to connect...");
-
 
                 // First get Validator Info
                 this.validators = await cdt.retrieveValidators();
@@ -145,6 +148,8 @@
                 this.$emit("terraStake", Big(this.validators[this.validator].totalShares / this.baseamount * this.price));
             },
             tryConnect: async function () {
+                this.success = '';
+                this.isdelegating=false;
                 this.error = '';
                 try {
                     this.connecting = true;
@@ -159,13 +164,11 @@
                     this.connecting = false;
                     return;
                 }
-                this.connecting = false;
                 if (!cdt.connected) {
                     this.connected = false;
                     this.log(this.consoleLog, cdt.lastError);
                     return;
                 }
-                this.connected = true;
                 this.log(this.consoleLog, "Connected!");
 
                 try {
@@ -176,6 +179,7 @@
                         this.error = 'Enter Pin on Ledger';
                     }
                     this.connected = false;
+                    this.connecting = false;
                     return
                 }
                 this.bech32 = this.myAddr.bech32;
@@ -211,17 +215,23 @@
                     this.log(this.consoleLog, this.reply[0].delegationsTotal);
                 }
                 this.readytodelegate = true;
+                this.connecting = false;
+                this.connected = true;
             },
             delegate: async function () {
+                this.error = '';
+                if (this.delegation>this.balance_available) {
+                    this.error = 'You cannot delegate more than available balance';
+                    this.isdelegating=false;
+                    return;
+                }
+                if (this.delegation<=0) {
+                    this.error = 'You need to delegate more than 0';
+                    this.isdelegating=false;
+                    return;
+                }
                 this.isdelegating=true;
-                if (!cdt.connected) {
-                    this.log(this.consoleLog, "Try connecting first..");
-                    return;
-                }
-                if (this.myAddr === null) {
-                    this.log(this.consoleLog, "Retrieve the device address first");
-                    return;
-                }
+
                 const txContext = {
                     chainId: this.chainId,
                     path: this.myAddr.path,
@@ -245,6 +255,8 @@
                     this.log(this.consoleLog, e);
                     if (e=='Error: Transaction rejected') {
                         this.error = 'Transaction rejected';
+                    } else if (e=='Error: Cosmos app does not seem to be open') {
+                            this.error = 'Ledger App does not seem to be open';
                     } else {
                         this.error = 'Unknown Error';
                     }
@@ -272,7 +284,7 @@
                     this.isdelegating=false;
                     return
                 }
-
+                this.success = 'Delegation successfull! Please wait 30 seconds to refresh';
                 this.log(this.consoleLog, response);
                 this.isdelegating=false;
             }
