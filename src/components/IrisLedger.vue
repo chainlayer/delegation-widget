@@ -21,6 +21,7 @@
                     </p>
                     <span v-if="this.connecting==true"><div class="alert alert-info">Looking for ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
                     <span v-if="this.isdelegating==true"><div class="alert alert-info">Delegating, please check ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
+                    <span v-if="this.iswithdrawing==true"><div class="alert alert-info">Withdrawing rewards, please check ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
                     <span v-if="this.success!=''"><div class="alert alert-success">{{success}}</div></span>
                     <span v-if="this.error!=''"><div class="alert alert-warning">{{error}}</div></span>
                     <span v-if="errors.first('derivation')!=null"><div class="alert alert-warning">{{ advanced }}{{ errors.first('derivation') }}</div></span>
@@ -103,6 +104,7 @@
                 validator: '',
                 rewards: '',
                 isdelegating: '',
+                iswithdrawing: '',
                 success: '',
                 advanced: false,
                 derivation: 'm44/118/0/0/0',
@@ -205,6 +207,9 @@
                     this.log(this.consoleLog, e);
                     if (e=='Error: Unknown Status Code: 26628') {
                         this.error = 'Enter Pin on Ledger';
+                    }
+                    if (e == "Error: Cosmos app does not seem to be open") {
+                        this.error = "Ledger app does not seem to be open";
                     }
                     this.connected = false;
                     this.connecting = false;
@@ -315,19 +320,19 @@
                     this.isdelegating=false;
                     return
                 }
-                this.success = 'Delegation successfull! Please wait 30 seconds to refresh';
+                this.success = 'Delegation successful! Please wait 30 seconds to refresh';
                 this.log(this.consoleLog, response);
                 this.isdelegating=false;
             },
             withdraw: async function () {
-                if (!cdt.connected) {
-                    this.log(this.consoleLog, "Try connecting first..");
+                this.error = '';
+                if (Big(this.rewards)==0) {
+                    this.error = 'You need rewards to withdraw';
+                    this.iswithdrawing=false;
                     return;
                 }
-                if (this.myAddr === null) {
-                    this.log(this.consoleLog, "Retrieve the device address first");
-                    return;
-                }
+                this.iswithdrawing=true;
+
                 const txContext = {
                     chainId: this.chainId,
                     path: this.myAddr.path,
@@ -340,14 +345,48 @@
                     'Delegation to ChainLayer.io',
                 );
 
+
                 this.log(this.consoleLog, "Waiting for device to sign");
 
-                const signedTx = await cdt.sign(dummyTx, txContext);
+                var signedTx = '';
+                try {
+                    signedTx = await cdt.sign(dummyTx, txContext);
+                } catch(e) {
+                    this.log(this.consoleLog, e);
+                    if (e=='Error: Transaction rejected') {
+                        this.error = 'Transaction rejected';
+                    } else if (e=='Error: Cosmos app does not seem to be open') {
+                        this.error = 'Ledger App does not seem to be open';
+                    } else {
+                        this.error = 'Unknown Error';
+                    }
+                    this.iswithdrawing=false;
+                    return
+                }
 
                 this.log(this.consoleLog, "Broadcasting signed tx");
-                const response = await  cdt.txSubmit(signedTx);
-
+                var response = '';
+                try {
+                    response = await cdt.txSubmit(signedTx);
+                    if (response.error) {
+                        this.error = response.error;
+                        this.log(this.consoleLog, response);
+                        this.iswithdrawing=false;
+                        return
+                    }
+                } catch(e) {
+                    this.log(this.consoleLog, e);
+                    if (e=='Error: Transaction rejected') {
+                        this.error = 'Transaction rejected';
+                    } else {
+                        this.error = 'Unknown Error';
+                    }
+                    this.iswithdrawing=false;
+                    return
+                }
+                this.success = 'Delegation successful! Please wait 30 seconds to refresh';
                 this.log(this.consoleLog, response);
+                this.iswithdrawing=false;
             }
         }
     }
