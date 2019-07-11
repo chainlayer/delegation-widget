@@ -23,17 +23,27 @@
                     <span v-if="this.isdelegating==true"><div class="alert alert-info">Delegating, please check ledger</div><br><img src="/img/Spinner.gif" height="93" width="93"/><br></span>
                     <span v-if="this.success!=''"><div class="alert alert-success">{{success}}</div></span>
                     <span v-if="this.error!=''"><div class="alert alert-warning">{{error}}</div></span>
-                    <span v-if="this.connecting==false && this.connected==false"><button v-on:click="tryConnect" class="btn btn-outline-success">Connect Ledger</button><br></span>
+                    <span v-if="errors.first('derivation')!=null"><div class="alert alert-warning">{{ advanced }}{{ errors.first('derivation') }}</div></span>
+                    <span v-if="this.advanced && this.connecting==false && this.connected==false">HD derivation path: <input v-model="derivation" name="derivation" type="text" placeholder="m44/118/0/0/0" value="44/118/0/0/0"
+                                                                          v-if="this.connecting==false && this.connected==false" class="form-control"
+                                                                          v-validate="{ required: true, regex: /^m44[/]\d+[/]\d+[/]\d+[/]\d+$/ }"><br></span>
+                    <span v-if="this.connecting==false && this.connected==false">
+                        <button v-on:click="setAdvanced" class="btn btn-outline-success">Advanced Options</button>
+                        <button v-on:click="tryConnect" class="btn btn-outline-success">Connect Ledger</button><br>
+                    </span>
                     <span v-if="this.bech32!=''"><b>Your Adress</b><br></span>
                     <span v-if="this.bech32!=''"><b>{{bech32}}</b><br><br></span>
-                    <label v-if="this.balance_available!=''">Available Balance: </label><span v-if="this.balance_available!=''">{{balance_available}} {{denom}}<br></span>
-                    <label v-if="this.balance_delegated!=''">Delegated Balance: </label><span v-if="this.balance_delegated!=''">{{balance_delegated}} {{denom}}<br></span>
-                    <label v-if="this.balance_total!=''">Total Balance: </label><span v-if="this.balance_total!=''">{{balance_total}} {{denom}}<br><br></span>
+                    <span v-if="this.bech32!='' && advanced"><label>Derivation path:</label> {{derivation}}<br></span>
+                    <label v-if="this.rewards!=''">Rewards: </label><span v-if="this.rewards!=''"> {{rewards}} {{denom}}<br></span>
+                    <label v-if="this.balance_available!=''">Available Balance: </label><span v-if="this.balance_available!=''"> {{balance_available}} {{denom}}<br></span>
+                    <label v-if="this.balance_delegated!=''">Delegated Balance: </label><span v-if="this.balance_delegated!=''"> {{balance_delegated}} {{denom}}<br></span>
+                    <label v-if="this.balance_total!=''">Total Balance: </label><span v-if="this.balance_total!=''"> {{balance_total}} {{denom}}<br><br></span>
                     <label v-if="this.readytodelegate">Amount to delegate to ChainLayer (in {{denom}}): </label>
                     <input v-model.number="delegation" type="number" v-if="this.readytodelegate" @keypress="onlyNumber" class="form-control" ><br>
                     <br>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" v-on:click="withdraw" v-if="this.readytodelegate">Withdraw</button>&nbsp;
                     <button type="button" class="btn btn-secondary" v-on:click="delegate" v-if="this.readytodelegate">Delegate</button>&nbsp;
                     <button type="button" class="btn btn-secondary" v-on:click="tryConnect" v-if="this.readytodelegate">Refresh</button>&nbsp;
                     <button type="button" class="btn btn-secondary" v-on:click="hide">Done</button>
@@ -94,8 +104,15 @@
                 rewards: '',
                 isdelegating: '',
                 success: '',
-                hrp: ''
-            }
+                advanced: false,
+                derivation: 'm44/118/0/0/0',
+                hrp: '',
+                derivationsplit: '',
+                der_network: '',
+                der_account: '',
+                der_change: '',
+                der_index: '',
+        }
         },
         computed: {
             consoleStatus() {
@@ -125,6 +142,9 @@
                     console.log(msg);
                 }
             },
+            setAdvanced: async function() {
+                this.advanced = !this.advanced;
+            },
             init: async function () {
                 this.success = '';
                 this.error = '';
@@ -147,9 +167,18 @@
                 this.$emit("cosmosStake", Big(this.validators[this.validator].totalShares / this.baseamount * this.price));
             },
             tryConnect: async function () {
+                this.log(this.consoleLog, "Derivation: " + this.derivation);
                 this.success = '';
                 this.isdelegating=false;
                 this.error = '';
+
+                // get Variables from derivation path
+                this.derivationsplit = this.derivation.split("/"); // 'm44/118/0/0/0',
+                this.der_network = this.derivationsplit[1];
+                this.der_account = this.derivationsplit[2];
+                this.der_change = this.derivationsplit[3];
+                this.der_index = this.derivationsplit[4];
+
                 try {
                     this.connecting = true;
                     await cdt.connect();
@@ -171,7 +200,7 @@
                 this.log(this.consoleLog, "Connected!");
 
                 try {
-                    this.myAddr = await cdt.retrieveAddress(0, 0);
+                    this.myAddr = await cdt.retrieveAddress(this.der_network, this.der_account, this.der_change, this.der_index);
                 } catch(e) {
                     this.log(this.consoleLog, e);
                     if (e=='Error: Unknown Status Code: 26628') {
@@ -213,6 +242,9 @@
                     this.balance_total = amtformatter.format(Big(this.reply[0].delegationsTotal/this.baseamount).add(Big(this.accInfo.balance/this.baseamount)));
                     this.log(this.consoleLog, this.reply[0].delegationsTotal);
                 }
+                this.rewards = await cdt.getRewards(this.myAddr);
+                this.rewards = amtformatter.format(Big(this.rewards / this.baseamount));
+
                 this.readytodelegate = true;
                 this.connecting = false;
                 this.connected = true;
@@ -286,7 +318,7 @@
                 this.success = 'Delegation successfull! Please wait 30 seconds to refresh';
                 this.log(this.consoleLog, response);
                 this.isdelegating=false;
-            }, /*
+            },
             withdraw: async function () {
                 if (!cdt.connected) {
                     this.log(this.consoleLog, "Try connecting first..");
@@ -317,7 +349,7 @@
                 const response = await  cdt.txSubmit(signedTx);
 
                 this.log(this.consoleLog, response);
-            } */
+            }
         }
     }
 </script>
