@@ -1,7 +1,7 @@
 {
   "name": "delegation-widget-iris",
-  "version": "0.0.1",
-  "description": "Delegation widget for Iris",
+  "version": "1.0.0",
+  "description": "Delegation widget",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -17,7 +17,7 @@
     "@ledgerhq/hw-transport-u2f": "^4.61.0",
     "@ledgerhq/hw-transport-webusb": "^4.61.0",
     "core-js": "^2.6.5",
-    "cosmos-sdk-delegation-lib": "chainlayer/cosmos-sdk-delegation-lib#759260d",
+    "cosmos-sdk-delegation-lib": "1.0.1",
     "vee-validate": "^2.2.12",
     "vue": "^2.6.10",
     "vue-browser-detect-plugin": "^0.1.2",

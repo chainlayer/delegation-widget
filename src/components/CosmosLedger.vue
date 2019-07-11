@@ -247,7 +247,15 @@
                     this.log(this.consoleLog, this.reply[0].delegationsTotal);
                 }
                 this.rewards = await cdt.getRewards(this.myAddr);
-                this.rewards = amtformatter.format(Big(this.rewards / this.baseamount));
+                if (this.rewards.error) {
+                    // This also happens when there is no delegation so just set rewards to 0
+                    this.log(this.consoleLog, this.rewards.error);
+                    this.rewards = amtformatter.format(Big(0 / this.baseamount));
+                    this.log(this.consoleLog, "can't get rewards");
+                } else {
+                    this.log(this.consoleLog, this.rewards);
+                    this.rewards = amtformatter.format(Big(this.rewards / this.baseamount));
+                }
 
                 this.readytodelegate = true;
                 this.connecting = false;

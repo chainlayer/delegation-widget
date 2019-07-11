@@ -1,6 +1,18 @@
-# delegation-widget-iris
-=======
-# cosmos-delegation-example
+# Delegation Widget Iris, Terra and Cosmos
+
+## Usage
+This widget uses cosmos-sdk-delegation-lib to get necessary data. To use this library you need an LCD server for all three coins and change the validator address in the code.
+
+## TODO
+* Caching of data where possible
+* Online button showing that the LCD are online
+* Redelegation
+* Undelegate
+* Change validator
+
+## Copyright
+* Copyright (c) 2019 ChainLayer
+Inspired on the work by ZondaX GmbH in cosmos-delegation-example
 
 ## Project setup
 ```
@@ -17,17 +29,8 @@ yarn run serve
 yarn run build
 ```
 
-### Run your tests
-```
-yarn run test
-```
-
 ### Lints and fixes files
 ```
 yarn run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
-
-screen irislcd start --node=tcp://localhost:26657 --laddr=tcp://0.0.0.0:1317 --chain-id=irishub --home=$HOME/.iriscli/ --trust-node
