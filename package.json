@@ -17,7 +17,7 @@
     "@ledgerhq/hw-transport-u2f": "^4.61.0",
     "@ledgerhq/hw-transport-webusb": "^4.61.0",
     "core-js": "^2.6.5",
-    "cosmos-sdk-delegation-lib": "^1.1.6",
+    "cosmos-sdk-delegation-lib": "1.2.2",
     "vee-validate": "^2.2.12",
     "vue": "^2.6.10",
     "vue-browser-detect-plugin": "^0.1.2",

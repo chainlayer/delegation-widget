@@ -157,7 +157,7 @@
                 this.readytodelegate = false;
                 this.baseamount = 1000000;
                 this.validator = 'terravaloper1kgddca7qj96z0qcxr2c45z73cfl0c75paknc5e';
-                this.chainId = 'columbus-2';
+                this.chainId = 'columbus-3';
 
                 this.log(this.consoleLog, "Trying to connect...");
 

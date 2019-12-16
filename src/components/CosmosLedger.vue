@@ -156,7 +156,7 @@
                 this.readytodelegate = false;
                 this.baseamount = 1000000;
                 this.validator = 'cosmosvaloper1kgddca7qj96z0qcxr2c45z73cfl0c75p7f3s2e';
-                this.chainId = 'cosmoshub-2';
+                this.chainId = 'cosmoshub-3';
 
                 this.log(this.consoleLog, "Trying to connect...");
 
