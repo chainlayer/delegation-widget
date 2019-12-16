@@ -1,11 +1,11 @@
 <template>
-    <div class="cosmosLedger" style="width: 300px; display:inline-block; vertical-align:top">
-        <img src="/img/logo-cosmos.svg" alt="Cosmos" title="Cosmos" width="145" height="46"><br>
+    <div class="kavaLedger" style="width: 300px; display:inline-block; vertical-align:top">
+        <img src="/img/logo-kava.svg" alt="Kava" title="Kava" width="145" height="46"><br>
         <span v-if="this.staked!=''"><label>Staked by ChainLayer: </label><br>
             <span>{{staked}} {{denom}} ({{stakedUSD}})</span><br></span>
         <span v-if="this.price!=''">Price {{denom}}: $ {{price}}</span><br>
         <button v-if="this.$browserDetect.meta.name=='Chrome'" v-on:click="show" class="btn btn-outline-success">Delegate</button>
-        <modal name="cosmos-modal" :width="600" :draggable="true" :scrollable="true" height="auto">
+        <modal name="kava-modal" :width="600" :draggable="true" :scrollable="true" height="auto">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Ledger Delegation ChainLayer</h5>
@@ -55,13 +55,13 @@
 </template>
 
 <script>
-    var { CosmosDelegateTool } = require("cosmos-sdk-delegation-lib");
+    var { KavaDelegateTool } = require("cosmos-sdk-delegation-lib");
     import TransportU2F from '@ledgerhq/hw-transport-u2f';
     import Big from 'big.js';
 
     const transport = new TransportU2F();
-    const cdt = new CosmosDelegateTool(transport);
-    cdt.setNodeURL('https://cosmoshub-lcd.chainlayer.net');
+    const cdt = new KavaDelegateTool(transport);
+    cdt.setNodeURL('https://kava-lcd.chainlayer.net');
 
     var curformatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -74,7 +74,7 @@
     });
 
     export default {
-        name: 'CosmosLedger',
+        name: 'KavaLedger',
         props: {
             restUrl: String,
         },
@@ -126,10 +126,10 @@
         },
         methods: {
             show () {
-                this.$modal.show('cosmos-modal');
+                this.$modal.show('kava-modal');
             },
             hide () {
-                this.$modal.hide('cosmos-modal');
+                this.$modal.hide('kava-modal');
             },
             onlyNumber ($event) {
                 //console.log($event.keyCode); //keyCodes value
@@ -151,12 +151,12 @@
                 this.success = '';
                 this.error = '';
                 this.myAddr = null;
-                this.denom = 'Atom';
+                this.denom = 'Kava';
                 this.isdelegating=false;
                 this.readytodelegate = false;
                 this.baseamount = 1000000;
-                this.validator = 'cosmosvaloper1kgddca7qj96z0qcxr2c45z73cfl0c75p7f3s2e';
-                this.chainId = 'cosmoshub-2';
+                this.validator = 'kavavaloper1kgddca7qj96z0qcxr2c45z73cfl0c75p27tsg6';
+                this.chainId = 'kava-2';
 
                 this.log(this.consoleLog, "Trying to connect...");
 
@@ -166,7 +166,7 @@
 
                 this.price = await cdt.getPrice();
                 this.stakedUSD = curformatter.format(Big(this.validators[this.validator].totalShares / this.baseamount * this.price));
-                this.$emit("cosmosStake", Big(this.validators[this.validator].totalShares / this.baseamount * this.price));
+                this.$emit("kavaStake", Big(this.validators[this.validator].totalShares / this.baseamount * this.price));
             },
             tryConnect: async function () {
                 this.log(this.consoleLog, "Derivation: " + this.derivation);
@@ -235,6 +235,7 @@
                     this.delegation = parseInt(this.balance_available);
                 }
 
+                this.reply = await cdt.retrieveBalances([this.myAddr]);
                 this.reply = await cdt.retrieveBalances([this.myAddr]);
                 if (this.reply.error) {
                     this.log(this.consoleLog, "retrieveBalances error");

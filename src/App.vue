@@ -6,6 +6,7 @@
     <CosmosLedger msg="Delegation"/>
     <TerraLedger msg="Delegation"/>
     <IrisLedger msg="Delegation"/>
+    <KavaLedger msg="Delegation"/>
     <hr>
     <div class="alert alert-warning">Delegating on Windows 10 with a Ledger Nano S has had issues since the last Windows update. See <a href="https://www.ledger.com/your-ledger-device-and-the-upcoming-windows-10-update/" rel="nofollow noreferrer noopener">this Ledger post</a> for details</div>
   </div>
@@ -15,6 +16,7 @@
 import IrisLedger from './components/IrisLedger.vue'
 import CosmosLedger from './components/CosmosLedger.vue'
 import TerraLedger from './components/TerraLedger.vue'
+import KavaLedger from './components/KavaLedger.vue'
 import Big from 'big.js';
 
 export default {
@@ -23,12 +25,14 @@ export default {
     IrisLedger,
     CosmosLedger,
     TerraLedger,
+    KavaLedger,
   },
   data: function() {
     return {
       cosmosStake: Big(0),
       terraStake: Big(0),
       irisStake: Big(0),
+      kavaStake: Big(0),
     };
   },
   methods: {
